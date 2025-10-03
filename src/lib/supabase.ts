@@ -19,3 +19,13 @@ export interface Style {
   created_at: string;
   updated_at: string;
 }
+
+export interface Dream {
+  id: string;
+  user_id?: string;
+  title: string;
+  photo_url?: string;
+  video_url?: string;
+  created_at: string;
+  updated_at: string;
+}
