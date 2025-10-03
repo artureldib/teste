@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { stylesService } from '../services/stylesService';
 import { Style } from '../lib/supabase';
 
@@ -42,6 +43,16 @@ export default function Styleguide() {
     return acc;
   }, {} as Record<string, Style[]>);
 
+  const getColorBaseName = (colorName: string): string => {
+    const match = colorName.match(/^([a-z]+)-\d+$/);
+    return match ? match[1] : colorName;
+  };
+
+  const getColorShade = (colorName: string): string => {
+    const match = colorName.match(/^[a-z]+-(\d+)$/);
+    return match ? match[1] : '';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -71,11 +82,19 @@ export default function Styleguide() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Design System Styleguide</h1>
-          <p className="text-muted-foreground">
-            Complete color and typography scales synced with the database
-          </p>
+        <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-foreground mb-2">Design System Styleguide</h1>
+            <p className="text-muted-foreground">
+              Complete color and typography scales synced with the database
+            </p>
+          </div>
+          <Link
+            to="/"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            ← Back to Dream
+          </Link>
         </div>
 
         <div className="mb-6 flex gap-2 flex-wrap">
@@ -115,60 +134,98 @@ export default function Styleguide() {
           <div className="space-y-12">
             {Object.entries(groupedStyles).map(([category, categoryStyles]) => (
               <div key={category}>
-                <h2 className="text-2xl font-semibold text-foreground mb-4 capitalize">
+                <h2 className="text-2xl font-semibold text-foreground mb-6 capitalize">
                   {category}
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categoryStyles.map(style => (
-                    <div
-                      key={style.id}
-                      className="border border-muted rounded-lg p-4 hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold text-foreground">{style.name}</h3>
-                        {style.css_class && (
-                          <code className="text-xs bg-muted px-2 py-1 rounded">
-                            {style.css_class}
-                          </code>
+                {category === 'color' ? (
+                  <div className="space-y-8">
+                    {Object.entries(
+                      categoryStyles.reduce((acc, style) => {
+                        const baseName = getColorBaseName(style.name);
+                        if (!acc[baseName]) {
+                          acc[baseName] = [];
+                        }
+                        acc[baseName].push(style);
+                        return acc;
+                      }, {} as Record<string, Style[]>)
+                    ).map(([colorFamily, familyStyles]) => (
+                      <div key={colorFamily} className="border border-muted rounded-xl p-6 bg-card">
+                        <h3 className="text-xl font-semibold text-foreground mb-4 capitalize">
+                          {colorFamily}
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                          {familyStyles
+                            .sort((a, b) => {
+                              const shadeA = parseInt(getColorShade(a.name));
+                              const shadeB = parseInt(getColorShade(b.name));
+                              return shadeA - shadeB;
+                            })
+                            .map(style => (
+                              <div
+                                key={style.id}
+                                className="group relative overflow-hidden rounded-lg border border-muted hover:shadow-lg transition-all"
+                              >
+                                <div
+                                  className="h-24 w-full transition-transform group-hover:scale-105"
+                                  style={{ backgroundColor: style.value }}
+                                />
+                                <div className="p-3 bg-background">
+                                  <div className="font-medium text-foreground text-sm">
+                                    {getColorShade(style.name)}
+                                  </div>
+                                  <code className="text-xs text-muted-foreground block mt-1">
+                                    {style.value}
+                                  </code>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {categoryStyles.map(style => (
+                      <div
+                        key={style.id}
+                        className="border border-muted rounded-lg p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold text-foreground">{style.name}</h3>
+                          {style.css_class && (
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              {style.css_class}
+                            </code>
+                          )}
+                        </div>
+
+                        {category === 'typography' && (
+                          <div className="mb-2">
+                            <div
+                              className="text-foreground mb-1"
+                              style={{ fontSize: style.value }}
+                            >
+                              The quick brown fox
+                            </div>
+                            <code className="text-sm text-muted-foreground">{style.value}</code>
+                          </div>
+                        )}
+
+                        {category !== 'color' && category !== 'typography' && (
+                          <div className="mb-2">
+                            <code className="text-sm text-muted-foreground">{style.value}</code>
+                          </div>
+                        )}
+
+                        {style.description && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {style.description}
+                          </p>
                         )}
                       </div>
-
-                      {category === 'color' && (
-                        <div className="flex items-center gap-3 mb-2">
-                          <div
-                            className="w-12 h-12 rounded border border-muted"
-                            style={{ backgroundColor: style.value }}
-                          />
-                          <code className="text-sm text-muted-foreground">{style.value}</code>
-                        </div>
-                      )}
-
-                      {category === 'typography' && (
-                        <div className="mb-2">
-                          <div
-                            className="text-foreground mb-1"
-                            style={{ fontSize: style.value }}
-                          >
-                            The quick brown fox
-                          </div>
-                          <code className="text-sm text-muted-foreground">{style.value}</code>
-                        </div>
-                      )}
-
-                      {category !== 'color' && category !== 'typography' && (
-                        <div className="mb-2">
-                          <code className="text-sm text-muted-foreground">{style.value}</code>
-                        </div>
-                      )}
-
-                      {style.description && (
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {style.description}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
