@@ -22,4 +22,8 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  h3 {
+    font-family: 'bookman-jf-pro', serif;
+  }
 }
