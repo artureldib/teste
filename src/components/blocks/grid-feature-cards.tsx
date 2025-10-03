@@ -1,5 +1,7 @@
 import { cn } from '@/lib/utils';
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 type FeatureType = {
 	title: string;
@@ -15,7 +17,13 @@ export function FeatureCard({ feature, className, ...props }: FeatureCardPorps) 
 	const p = genRandomPattern();
 
 	return (
-		<div className={cn('relative overflow-hidden p-6', className)} {...props}>
+		<Link to="/styleguide" className="block">
+			<motion.div
+				whileHover={{ scale: 1.02, y: -4 }}
+				transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+				className={cn('relative overflow-hidden p-6 cursor-pointer', className)}
+				{...props}
+			>
 			<div className="pointer-events-none absolute top-0 left-1/2 -mt-2 -ml-20 h-full w-full [mask-image:linear-gradient(white,transparent)]">
 				<div className="from-foreground/5 to-foreground/1 absolute inset-0 bg-gradient-to-r [mask-image:radial-gradient(farthest-side_at_top,white,transparent)] opacity-100">
 					<GridPattern
@@ -28,10 +36,16 @@ export function FeatureCard({ feature, className, ...props }: FeatureCardPorps) 
 					/>
 				</div>
 			</div>
-			<feature.icon className="text-foreground/75 size-6" strokeWidth={1} aria-hidden />
-			<h3 className="mt-10 text-sm md:text-base">{feature.title}</h3>
-			<p className="text-muted-foreground relative z-20 mt-2 text-xs font-light">{feature.description}</p>
-		</div>
+				<motion.div
+					whileHover={{ rotate: [0, -5, 5, -5, 0] }}
+					transition={{ duration: 0.5 }}
+				>
+					<feature.icon className="text-foreground/75 size-6" strokeWidth={1} aria-hidden />
+				</motion.div>
+				<h3 className="mt-10 text-sm md:text-base">{feature.title}</h3>
+				<p className="text-muted-foreground relative z-20 mt-2 text-xs font-light">{feature.description}</p>
+			</motion.div>
+		</Link>
 	);
 }
 
