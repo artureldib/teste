@@ -1,4 +1,5 @@
 import { FeatureCard } from './components/FeatureCard';
+import { FeatureCard as ShadcnFeatureCard } from './components/blocks/grid-feature-cards';
 
 const StarIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -69,19 +70,37 @@ const features = [
 function App() {
   return (
     <div className="min-h-screen bg-background p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-4">Feature Cards</h1>
-        <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
-          Beautiful feature cards with animated grid patterns and gradient overlays.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <FeatureCard
-              key={index}
-              feature={feature}
-              className="border rounded-lg bg-card hover:shadow-lg transition-shadow"
-            />
-          ))}
+      <div className="max-w-7xl mx-auto space-y-16">
+        <div>
+          <h1 className="text-4xl font-bold text-center mb-4">Original Recreation</h1>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            The FeatureCard component recreated from the provided code.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={index}
+                feature={feature}
+                className="border rounded-lg bg-card hover:shadow-lg transition-shadow"
+              />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h1 className="text-4xl font-bold text-center mb-4">Shadcn Version</h1>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            The FeatureCard installed from 21st.dev registry.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {features.map((feature, index) => (
+              <ShadcnFeatureCard
+                key={index}
+                feature={feature}
+                className="border rounded-lg bg-card hover:shadow-lg transition-shadow"
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
