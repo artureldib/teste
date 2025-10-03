@@ -1,4 +1,5 @@
 import { supabase, Dream } from '../lib/supabase';
+import { videoGenerationService } from './videoGenerationService';
 
 export const dreamsService = {
   async getUserDream(): Promise<Dream | null> {
@@ -13,9 +14,8 @@ export const dreamsService = {
     return data;
   },
 
-  async createDream(title: string, photoFile?: File, videoFile?: File): Promise<Dream> {
+  async createDream(title: string, photoFile?: File): Promise<Dream> {
     let photoUrl: string | undefined;
-    let videoUrl: string | undefined;
 
     if (photoFile) {
       const photoPath = `${Date.now()}-${photoFile.name}`;
@@ -32,39 +32,54 @@ export const dreamsService = {
       photoUrl = photoData.publicUrl;
     }
 
-    if (videoFile) {
-      const videoPath = `${Date.now()}-${videoFile.name}`;
-      const { error: videoError } = await supabase.storage
-        .from('dream-videos')
-        .upload(videoPath, videoFile);
-
-      if (videoError) throw videoError;
-
-      const { data: videoData } = supabase.storage
-        .from('dream-videos')
-        .getPublicUrl(videoPath);
-
-      videoUrl = videoData.publicUrl;
-    }
+    const enrichedPrompt = await videoGenerationService.enrichPrompt(title);
 
     const { data, error } = await supabase
       .from('dreams')
       .insert({
         title,
         photo_url: photoUrl,
-        video_url: videoUrl,
+        video_status: 'generating',
+        video_prompt: enrichedPrompt,
         user_id: null,
       })
       .select()
       .single();
 
     if (error) throw error;
+
+    this.generateVideoAsync(data.id, title, photoUrl);
+
     return data;
   },
 
-  async updateDream(id: string, title: string, photoFile?: File, videoFile?: File): Promise<Dream> {
+  async generateVideoAsync(dreamId: string, description: string, photoUrl?: string): Promise<void> {
+    try {
+      const videoUrl = await videoGenerationService.generateVideo({
+        dreamDescription: description,
+        photoUrl,
+      });
+
+      await supabase
+        .from('dreams')
+        .update({
+          video_url: videoUrl,
+          video_status: 'completed',
+        })
+        .eq('id', dreamId);
+    } catch (err) {
+      await supabase
+        .from('dreams')
+        .update({
+          video_status: 'failed',
+          error_message: err instanceof Error ? err.message : 'Video generation failed',
+        })
+        .eq('id', dreamId);
+    }
+  },
+
+  async updateDream(id: string, title: string, photoFile?: File): Promise<Dream> {
     let photoUrl: string | undefined;
-    let videoUrl: string | undefined;
 
     if (photoFile) {
       const photoPath = `${Date.now()}-${photoFile.name}`;
@@ -81,24 +96,14 @@ export const dreamsService = {
       photoUrl = photoData.publicUrl;
     }
 
-    if (videoFile) {
-      const videoPath = `${Date.now()}-${videoFile.name}`;
-      const { error: videoError } = await supabase.storage
-        .from('dream-videos')
-        .upload(videoPath, videoFile);
+    const enrichedPrompt = await videoGenerationService.enrichPrompt(title);
 
-      if (videoError) throw videoError;
-
-      const { data: videoData } = supabase.storage
-        .from('dream-videos')
-        .getPublicUrl(videoPath);
-
-      videoUrl = videoData.publicUrl;
-    }
-
-    const updateData: any = { title };
+    const updateData: any = {
+      title,
+      video_status: 'generating',
+      video_prompt: enrichedPrompt,
+    };
     if (photoUrl) updateData.photo_url = photoUrl;
-    if (videoUrl) updateData.video_url = videoUrl;
 
     const { data, error } = await supabase
       .from('dreams')
@@ -108,6 +113,9 @@ export const dreamsService = {
       .single();
 
     if (error) throw error;
+
+    this.generateVideoAsync(id, title, photoUrl);
+
     return data;
   },
 

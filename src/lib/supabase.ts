@@ -26,6 +26,9 @@ export interface Dream {
   title: string;
   photo_url?: string;
   video_url?: string;
+  video_status?: string;
+  video_prompt?: string;
+  error_message?: string;
   created_at: string;
   updated_at: string;
 }

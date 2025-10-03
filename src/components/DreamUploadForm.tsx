@@ -10,7 +10,6 @@ interface DreamUploadFormProps {
 export function DreamUploadForm({ onDreamCreated, onCancel }: DreamUploadFormProps) {
   const [title, setTitle] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,13 +26,6 @@ export function DreamUploadForm({ onDreamCreated, onCancel }: DreamUploadFormPro
     }
   };
 
-  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setVideoFile(file);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -42,15 +34,10 @@ export function DreamUploadForm({ onDreamCreated, onCancel }: DreamUploadFormPro
       return;
     }
 
-    if (!videoFile) {
-      setError('Please upload a video for your dream');
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
-      const dream = await dreamsService.createDream(title, photoFile || undefined, videoFile);
+      const dream = await dreamsService.createDream(title, photoFile || undefined);
       onDreamCreated(dream);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create dream');
@@ -63,23 +50,26 @@ export function DreamUploadForm({ onDreamCreated, onCancel }: DreamUploadFormPro
     <div className="w-full max-w-2xl mx-auto p-8 bg-card border border-muted rounded-2xl shadow-xl">
       <h2 className="text-3xl font-bold text-foreground mb-2">Create Your Dream</h2>
       <p className="text-muted-foreground mb-6">
-        Upload your photo and video to create an immersive motivational experience
+        Describe your dream and we'll create a cinematic video to inspire you every day
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-foreground mb-2">
-            Describe Your Dream
+            Describe Your Dream <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
+          <textarea
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g., Traveling to Rome, Learning to surf in Bali..."
-            className="w-full px-4 py-3 bg-background border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground placeholder:text-muted-foreground"
+            placeholder="e.g., Traveling to Rome, exploring ancient ruins and eating authentic Italian food under the sunset..."
+            rows={4}
+            className="w-full px-4 py-3 bg-background border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground placeholder:text-muted-foreground resize-none"
             disabled={loading}
           />
+          <p className="mt-2 text-sm text-muted-foreground">
+            Be specific and vivid. We'll enrich your description to create a cinematic experience.
+          </p>
         </div>
 
         <div>
@@ -103,25 +93,9 @@ export function DreamUploadForm({ onDreamCreated, onCancel }: DreamUploadFormPro
               />
             </div>
           )}
-        </div>
-
-        <div>
-          <label htmlFor="video" className="block text-sm font-medium text-foreground mb-2">
-            Your Dream Video <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="file"
-            id="video"
-            accept="video/*"
-            onChange={handleVideoChange}
-            className="w-full px-4 py-3 bg-background border border-muted rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-500 file:text-white file:cursor-pointer hover:file:bg-blue-600"
-            disabled={loading}
-          />
-          {videoFile && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Selected: {videoFile.name}
-            </p>
-          )}
+          <p className="mt-2 text-sm text-muted-foreground">
+            Upload a photo to personalize your dream video
+          </p>
         </div>
 
         {error && (
@@ -136,7 +110,7 @@ export function DreamUploadForm({ onDreamCreated, onCancel }: DreamUploadFormPro
             disabled={loading}
             className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors"
           >
-            {loading ? 'Creating...' : 'Create Dream'}
+            {loading ? 'Creating Your Dream...' : 'Generate Cinematic Video'}
           </button>
           {onCancel && (
             <button
