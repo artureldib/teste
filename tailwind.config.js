@@ -15,6 +15,10 @@ export default {
           foreground: 'hsl(var(--muted-foreground))',
         },
       },
+      fontFamily: {
+        sans: ['lft-etica-mono', 'monospace'],
+        mono: ['anonymous-pro', 'monospace'],
+      },
     },
   },
   plugins: [],
